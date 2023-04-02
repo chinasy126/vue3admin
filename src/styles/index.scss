@@ -1,0 +1,25 @@
+@import 'src/styles/variables.module';
+@import 'src/styles/element-plus';
+@import './sidebar.scss';
+@import './tailwind.scss';
+
+html,body,#app{
+  height: 100%;
+}
+
+// main-container global css
+.app-container {
+  padding: 20px;
+}
+
+.search{
+  padding: 18px 0 0 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  box-shadow: 6px 2px 6px #CCC;
+}
+
+svg{
+  display: inline-block;
+}
