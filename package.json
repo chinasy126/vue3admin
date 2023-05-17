@@ -1,5 +1,5 @@
 {
-  "name": "admin",
+  "name": "vue3Admin",
   "version": "1.2.0",
   "scripts": {
     "dev": "vite serve --mode development",

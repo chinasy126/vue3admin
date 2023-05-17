@@ -20,7 +20,7 @@ export function getRouterToShow(dataBaseRouters: any[]) {
     dataBaseRouters.forEach(item => {
       let r = dynamicRoutes.find(i => i.name === item.name);
       if (r) {
-        let data = {...r};
+        let data:any = {...r};
         data.meta.title = item.meta.title;
         data.meta.menuOrder = item.meta.menuOrder;
         data.children = getRouterChildren(item, r);
