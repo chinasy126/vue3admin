@@ -10,9 +10,11 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom"],
-    "baseUrl": ".",
+    "baseUrl": "./",
     "allowJs": true,
     "paths": {
+      "components/*": ["src/components/*"],
+      "assets/*": ["src/assets/*"],
       "@/*": ["src/*"]
     },
     "skipLibCheck": true /* Skip type checking all .d.ts files. */,

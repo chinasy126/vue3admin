@@ -30,7 +30,7 @@ const props = defineProps({
     }
   },
   btnId: {
-    type: String,
+    type: Number,
     default: ''
   }
 });

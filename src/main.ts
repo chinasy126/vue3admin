@@ -22,6 +22,12 @@ const app = createApp(App);
 // 自定义指令
 import * as directive from '@/directive';
 
+
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
 Object.keys(directive).forEach(key => {
   app.directive(key, (directive as { [key: string]: Directive })[key]);
 });

@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    width="600px"
+    width="800px"
     append-to-body
     :model-value="opFormDialog.visible"
     :title="opFormDialog.title"
@@ -144,8 +144,8 @@ function closeForm() {
 const getFormProp = () => {
   let obj = {}
   prop.opFormItems.forEach(item => {
-    if (item.type === 'number' && isNull(item.value)) {
-      obj[item.prop] = isNull(item.value)
+    if (item.type === 'number') {
+      obj[item.prop] = item.value === '' ? 0 : parseInt(item.value)
     } else {
       if (typeof (item.showValue) !== 'undefined' && item.showValue === false) {
         obj[item.prop] = ''
@@ -154,8 +154,6 @@ const getFormProp = () => {
       }
     }
   })
-
-  // state.opFormModel = obj
   opFormModel.value = obj
 }
 

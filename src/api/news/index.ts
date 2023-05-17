@@ -44,7 +44,7 @@ export function newsInsert(params: any) {
  */
 export function newsModify(params: any) {
   return request({
-    url: `/news/modify`,
+    url: `/news/saveOrUpdate`,
     method: 'post',
     data: params
   });

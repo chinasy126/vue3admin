@@ -43,7 +43,12 @@
     >
       <template v-slot:3>
         <el-form-item label="相关图片">
-          <Upload :img="opCustomFormItems.pic" @uploadSuccess="uploadSuccess"></Upload>
+          <Upload :uploadImgList="uploadImgList" @uploadSuccess="uploadSuccess" uploadFolderName='product'></Upload>
+        </el-form-item>
+      </template>
+      <template v-slot:4>
+        <el-form-item label='相关内容'>
+          <Editor v-model='opCustomFormItems.contents'></Editor>
         </el-form-item>
       </template>
 
@@ -73,7 +78,7 @@ const insertFormDataRef = ref(ElForm);
 const opCustomFormItems = reactive({})
 
 const importExcelUrl = `${import.meta.env.VITE_APP_BASE_API}/news/import`
-
+import Editor from '@/components/Editor/index.vue';
 // S 搜索+表格
 import TablePannel from '@/components/TablePannel/index.vue';
 import SearchPanel from '@/components/SearchPanel/index.vue';
@@ -132,6 +137,7 @@ const opFormRules = ref({
   ]
 });
 
+const uploadImgList = ref([])
 
 /**
  * 新增修改操作
@@ -141,7 +147,6 @@ const opFormRules = ref({
 const opearDialog = async (opera, param) => {
   opFnName.value = saveOrUpdate;
   if (opera === 'add') {
-
     opFormItems.value = opFormItems.value.map(item => {
       if (item.prop !== "update")
         item.value = ''
@@ -149,13 +154,14 @@ const opearDialog = async (opera, param) => {
     });
     opFormDialog.value.title = '新增';
     opFormDialog.value.buttonTitle = '新增';
-
+    uploadImgList.value = []
   } else if (opera === 'edit') {
     opFormItems.value = opFormItems.value.map(item => {
       item.value = param[item.prop];
       return item;
     });
-    opCustomFormItems.pic = param.pic
+    opCustomFormItems.contents = param.contents;
+    uploadImgList.value = [{ 'url': param.pic }]
     opFormDialog.value.title = '修改';
     opFormDialog.value.buttonTitle = '修改';
   }
@@ -244,7 +250,7 @@ onMounted(async () => {
  * @param params
  */
 const uploadSuccess = (params) => {
-  opCustomFormItems.pic = params
+  opCustomFormItems.pic = params[0].url;
 }
 
 /**

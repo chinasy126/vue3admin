@@ -28,7 +28,15 @@ export default ({ mode }: ConfigEnv): UserConfig => {
           changeOrigin: true,
           rewrite: path =>
             path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')
+        },
+
+        [env.VITE_APP_UPLOAD_PREFIX_API] : {
+          target: env.VITE_APP_UPLOAD_URL, // 图片访问转换地址
+          changeOrigin: true,
+          rewrite: path =>
+            path.replace(new RegExp('^' + env.VITE_APP_UPLOAD_PREFIX_API), '')
         }
+
       }
     },
     resolve: {

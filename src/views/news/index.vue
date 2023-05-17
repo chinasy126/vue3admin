@@ -9,7 +9,9 @@
     >
       <template #operationButton>
         <el-button @click="opearDialog('add', '')" v-permission='["add"]'> 新增</el-button>
-        <FileUpload :fileUploadFnName="importFileData" @onUploadFileSuccess='onUploadFileSuccess' v-permission="['import']" >文件上传</FileUpload>
+        <FileUpload :fileUploadFnName='importFileData' @onUploadFileSuccess='onUploadFileSuccess'
+                    v-permission="['import']">文件上传
+        </FileUpload>
         <el-button type='danger' @click='exportData()' v-permission="['export']"> 导出</el-button>
         <el-button type='danger' @click='opBatchDelAialog()' v-permission="['batchDeletion']">批量删除</el-button>
       </template>
@@ -45,9 +47,15 @@
       @opCloseForm='opCloseForm'
       @onFormSubmit='refreshList'
     >
+
+      <template v-slot:4>
+        <el-form-item label='相关内容'>
+          <Editor v-model='opCustomFormItems.contents'></Editor>
+        </el-form-item>
+      </template>
       <template v-slot:3>
         <el-form-item label='相关图片'>
-          <Upload :img='opCustomFormItems.pic' @uploadSuccess='uploadSuccess'></Upload>
+          <Upload :uploadImgList='uploadImgList' @uploadSuccess='uploadSuccess' uploadFolderName='news'></Upload>
         </el-form-item>
       </template>
 
@@ -67,15 +75,19 @@
 </template>
 
 <script setup lang='ts'>
-import FileUpload from '@/components/Upload/FileUpload.vue'
+import FileUpload from '@/components/Upload/FileUpload.vue';
 import Upload from '@/components/Upload/Index.vue';
 import { computed, onMounted, reactive, ref, getCurrentInstance } from 'vue';
+
+import Editor from '@/components/Editor/index.vue';
+
 import { ElForm } from 'element-plus';
 
 const searchFormRef = ref(ElForm); // 重置
 const insertFormDataRef = ref(ElForm);
 const opCustomFormItems = reactive({});
-
+// 上传图片列表
+const uploadImgList = ref([]);
 const importExcelUrl = `${import.meta.env.VITE_APP_BASE_API}/news/import`;
 
 // 文件上传接口
@@ -114,7 +126,15 @@ const { comActionDialog, comActionCondition, comFnName } = comActionComponent();
 
 // 调取API
 
-import { dataListByPage, exportExcelData, newsDelete, newsInsert, newsModify, batchDelete , importFileData} from '@/api/news/index';
+import {
+  dataListByPage,
+  exportExcelData,
+  newsDelete,
+  newsInsert,
+  newsModify,
+  batchDelete,
+  importFileData
+} from '@/api/news/index';
 import { downloadFile, parseTime } from '@/utils';
 // 搜索输入框列表
 const searchPannelList = ref([
@@ -144,11 +164,15 @@ const opFormRules = ref({
  * @param param
  */
 const opearDialog = async (opera, param) => {
+  uploadImgList.value = [];
   if (opera === 'add') {
     opFnName.value = newsInsert;
     opFormItems.value = opFormItems.value.map(item => {
       if (item.prop !== 'update')
         item.value = '';
+      if (item.type === 'number') {
+        item.value = 0;
+      }
       return item;
     });
     opFormDialog.value.title = '新增';
@@ -160,7 +184,8 @@ const opearDialog = async (opera, param) => {
       item.value = param[item.prop];
       return item;
     });
-    opCustomFormItems.pic = param.pic;
+    opCustomFormItems.contents = param.contents;
+    uploadImgList.value = [{ 'url': param.pic }];
     opFormDialog.value.title = '修改';
     opFormDialog.value.buttonTitle = '修改';
   }
@@ -207,7 +232,6 @@ const getBtnList = (title, data) => {
 };
 
 
-
 onMounted(() => {
   getListFnName.value = dataListByPage;
   opFormItems.value = [
@@ -225,7 +249,7 @@ onMounted(() => {
  * @param params
  */
 const uploadSuccess = (params) => {
-  opCustomFormItems.pic = params;
+  opCustomFormItems.pic = params[0].url;
 };
 
 /**
@@ -276,9 +300,9 @@ const opBatchDelAialog = () => {
 /**
  * 上传成功
  */
-const onUploadFileSuccess = ()=>{
+const onUploadFileSuccess = () => {
   getItemList();
-}
+};
 
 </script>
 
