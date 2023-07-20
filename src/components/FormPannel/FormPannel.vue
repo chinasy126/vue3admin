@@ -8,7 +8,8 @@
   >
     <el-form
       ref='opFormModelRef'
-      :model='opFormModel' :rules='opFormRules'
+      :model='opFormModel'
+      :rules='opFormRules'
       :label-width='labelWidth'
       class='demo-ruleForm'
       status-icon
@@ -30,7 +31,8 @@
             <el-input-number v-model='opFormModel[item.prop]'></el-input-number>
           </template>
           <template v-if="item.type === 'select'">
-            <el-select v-model='opFormModel[item.prop]' placeholder='请选择' filterable clearable>
+            <el-select v-model='opFormModel[item.prop]' placeholder='请选择' filterable clearable
+                       @change='(val:any)=> onChangeSelect(val,item,opFormModel)'>
               <el-option v-for='slectItem in item.selectValue'
                          :key='slectItem.value'
                          :label='slectItem.label'
@@ -61,13 +63,15 @@ import { isNull } from '@/utils';
 import { defineProps } from 'vue';
 import { insertData } from '@/api/permission/user';
 import { ElForm, ElMessage } from 'element-plus';
+import { string } from 'fast-glob/out/utils';
 
-const emit = defineEmits(['opCloseForm', 'onFormSubmit']);
+const emit = defineEmits(['opCloseForm', 'onFormSubmit', 'onChangeSelect']);
 const prop = defineProps({
-  opCustomFormItems: {
-    type: Object,
-    default: {}
-  },
+
+  // opCustomFormItems: {
+  //   type: Object,
+  //   default: {}
+  // },
   opFormDialog: {
     type: Object,
     default: () => {
@@ -142,22 +146,21 @@ function closeForm() {
  *  获取表单每一项目
  */
 const getFormProp = () => {
-  let obj = {};
-  prop.opFormItems.forEach(item => {
+  let obj: { [key: string]: any } = {};
+  prop.opFormItems.forEach((item: any) => {
     if (item.type === 'number' && isNull(item.value)) {
       obj[item.prop] = isNull(item.value);
     } else {
-      if (typeof (item.showValue) !== 'undefined' && item.showValue === false) {
+      if (typeof item.showValue !== 'undefined' && item.showValue === false) {
         obj[item.prop] = '';
       } else {
         obj[item.prop] = isNull(item.value);
       }
     }
   });
-
-  // state.opFormModel = obj
   opFormModel.value = obj;
 };
+
 
 /**
  * 提交表单内容
@@ -187,13 +190,23 @@ const submitForm = () => {
   });
 };
 
+/**
+ * 下拉框改变
+ * @param value
+ */
+const onChangeSelect = (value: number | string, type: any,opForm:any) => {
+  emit('onChangeSelect', value, type,opForm);
+};
+
 watch(() => prop.opFormItems, (newVal, oldVal) => {
   // 匹配表单每一项
   getFormProp();
 }, { deep: true, immediate: true });
-
+defineExpose({
+  getFormProp,
+})
 onMounted(() => {
-
+  getFormProp()
 });
 
 </script>

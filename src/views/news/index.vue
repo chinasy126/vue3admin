@@ -20,13 +20,12 @@
 
     <!-- S 列表面板 -->
     <TablePannel
-      :rowKey='record => record.id'
+      :rowKey='(record:any) =>{ return  record.id}'
       :columns='columns'
       :data-source='dataSource'
       @selection-change='handleSelectionChange'
       @changeSize='changeSize'
       @changeNum='changeNum'
-      :row-key='record => record.id'
       :table-loading='searchBtnLoading'
     >
       <template #operation='{ scope }'>
@@ -77,25 +76,39 @@
 <script setup lang='ts'>
 import FileUpload from '@/components/Upload/FileUpload.vue';
 import Upload from '@/components/Upload/Index.vue';
-import { computed, onMounted, reactive, ref, getCurrentInstance } from 'vue';
-
-import Editor from '@/components/Editor/index.vue';
-
-import { ElForm } from 'element-plus';
-
-const searchFormRef = ref(ElForm); // 重置
-const insertFormDataRef = ref(ElForm);
-const opCustomFormItems = reactive({});
-// 上传图片列表
-const uploadImgList = ref([]);
-const importExcelUrl = `${import.meta.env.VITE_APP_BASE_API}/news/import`;
-
-// 文件上传接口
-
-// S 搜索+表格
+import { computed, onMounted, reactive, ref, Ref, getCurrentInstance } from 'vue';
 import TablePannel from '@/components/TablePannel/index.vue';
 import SearchPanel from '@/components/SearchPanel/index.vue';
 import queryListComponent from '@/mixins/queryListComponent';
+import Editor from '@/components/Editor/index.vue';
+import FormPannel from '@/components/FormPannel/index.vue';
+import CommonAction from '@/components/CommonAction/index.vue';
+import opFormComponent from '@/mixins/opFormComponent';
+import { ElForm } from 'element-plus';
+import comActionComponent from '@/mixins/comActionComponent';
+// 调取API
+
+import {
+  dataListByPage,
+  exportExcelData,
+  newsDelete,
+  newsInsert,
+  newsModify,
+  batchDelete,
+  importFileData
+} from '@/api/news/index';
+import { downloadFile, parseTime } from '@/utils';
+
+const searchFormRef = ref(ElForm); // 重置
+const insertFormDataRef = ref(ElForm);
+const opCustomFormItems = reactive({ contents: '', pic: '' });
+// 上传图片列表
+const uploadImgList: Ref<{ url: string }[]> = ref([]);
+const importExcelUrl = `${import.meta.env.VITE_APP_BASE_API}/news/import`;
+// 文件上传接口
+
+// S 搜索+表格
+
 // 解构方法
 const {
   selectItemList,
@@ -112,30 +125,15 @@ const {
   handleSelectionChange
 } = queryListComponent();
 // E 搜索+表格
-import FormPannel from '@/components/FormPannel/index.vue';
-import opFormComponent from '@/mixins/opFormComponent';
 
 let { opFormDialog, opFnName, onFormSubmit, opCloseForm, opFormItems } = opFormComponent();
 // E 新增+修改
 // S 弹框操作
-import CommonAction from '@/components/CommonAction/index.vue';
-import comActionComponent from '@/mixins/comActionComponent';
 
 const { comActionDialog, comActionCondition, comFnName } = comActionComponent();
 // E 弹框操作
 
-// 调取API
 
-import {
-  dataListByPage,
-  exportExcelData,
-  newsDelete,
-  newsInsert,
-  newsModify,
-  batchDelete,
-  importFileData
-} from '@/api/news/index';
-import { downloadFile, parseTime } from '@/utils';
 // 搜索输入框列表
 const searchPannelList = ref([
   { type: 'input', name: '标题', prop: 'title' },
@@ -153,8 +151,8 @@ const columns = ref([
 ]);
 // 正则验证
 const opFormRules = ref({
-  roleName: [{ required: true, message: '请选输入角色名称', trigger: 'blur' }],
-  roleDesc: [{ required: true, message: '请选输入角色描述', trigger: 'blur' }]
+  title: [{ required: true, message: '请选输入标题', trigger: 'blur' }],
+  fTitle: [{ required: true, message: '请选输入副标题', trigger: 'blur' }]
 });
 
 
@@ -163,11 +161,14 @@ const opFormRules = ref({
  * @param opera
  * @param param
  */
-const opearDialog = async (opera, param) => {
+const opearDialog = async (opera: string, param: any) => {
   uploadImgList.value = [];
+  opCustomFormItems.contents = '';
+
+  // 数据操作的方法
+  opFnName.value = newsModify;
   if (opera === 'add') {
-    opFnName.value = newsInsert;
-    opFormItems.value = opFormItems.value.map(item => {
+    opFormItems.value = opFormItems.value.map((item: any) => {
       if (item.prop !== 'update')
         item.value = '';
       if (item.type === 'number') {
@@ -179,12 +180,11 @@ const opearDialog = async (opera, param) => {
     opFormDialog.value.buttonTitle = '新增';
 
   } else if (opera === 'edit') {
-    opFnName.value = newsModify;
-    opFormItems.value = opFormItems.value.map(item => {
+    opFormItems.value = opFormItems.value.map((item: any) => {
       item.value = param[item.prop];
       return item;
     });
-    opCustomFormItems.contents = param.contents;
+    opCustomFormItems.contents = typeof (param.contents) === 'object' ? '' : param.contents;
     uploadImgList.value = [{ 'url': param.pic }];
     opFormDialog.value.title = '修改';
     opFormDialog.value.buttonTitle = '修改';
@@ -196,14 +196,14 @@ const opearDialog = async (opera, param) => {
  *  操作后刷新列表
  */
 const refreshList = () => {
-  comActionDialog.value = { visible: false };
+  comActionDialog.value = { title: '', visible: false, buttonTitle: '', message: '' };
   getItemList();
 };
 
 /**
  *  删除
  */
-const comDelete = params => {
+const comDelete = (params: any) => {
   comFnName.value = newsDelete;
   comActionDialog.value = {
     title: '删除',
@@ -219,9 +219,9 @@ const comDelete = params => {
  * @param title
  * @param data
  */
-const getBtnList = (title, data) => {
+const getBtnList = (title: string, data: any) => {
   if (data.menubuttonList && data.menubuttonList.length !== 0) {
-    return data.menubuttonList.map(item => {
+    return data.menubuttonList.map((item: any) => {
       return {
         id: title + ',' + item.type + ',' + item.name,
         label: item.name
@@ -248,7 +248,7 @@ onMounted(() => {
  * 上传图片
  * @param params
  */
-const uploadSuccess = (params) => {
+const uploadSuccess = (params: any[]) => {
   opCustomFormItems.pic = params[0].url;
 };
 
@@ -258,7 +258,12 @@ const uploadSuccess = (params) => {
 
 const searchPanelRef = ref();
 const exportData = () => {
-  exportExcelData(searchPanelRef.value.searchForm).then(({ data }) => {
+  const params = {
+    id: (() => {
+      return selectItemList.value.map((i: any) => i.id);
+    })()
+  };
+  exportExcelData(params).then(({ data }) => {
     downloadFile(data, '新闻');
   });
 };
@@ -275,7 +280,7 @@ const headers = computed(() => {
  * @param file
  * @param fileList
  */
-const onSuccess = (response, file, fileList) => {
+const onSuccess = (response: any) => {
   if (response.code === 20000) {
     getItemList();
   }
@@ -286,7 +291,7 @@ const onSuccess = (response, file, fileList) => {
  *  批量删除
  */
 const opBatchDelAialog = () => {
-  const ids = selectItemList.value.map(item => item.id);
+  const ids = selectItemList.value.map((item: any) => item.id);
   comFnName.value = batchDelete;
   comActionDialog.value = {
     title: '批量删除',

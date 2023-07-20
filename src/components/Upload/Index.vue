@@ -10,7 +10,6 @@
       <el-button type='primary'>{{ uploadBtnName }}</el-button>
     </el-upload>
     <!-- E 上传按钮 -->
-
     <!-- S 文件列表显示区域 -->
     <div v-if="uploadDisplayType === 'file'">
       <ul class='el-upload-list el-upload-list--text' v-if='uploadImgUrl' v-for='(item,index) in uploadImgUrl'
@@ -56,9 +55,9 @@
           </div>
         </li>
       </ul>
-      <el-progress style='margin: 5px;' v-else-if='uploadImgIsUploading' type='circle'
-                   :percentage='uploadImgPercentage'
-      ></el-progress>
+      <!--      <el-progress style='margin: 5px;' v-else-if='uploadImgIsUploading' type='circle'-->
+      <!--                   :percentage='uploadImgPercentage'-->
+      <!--      ></el-progress>-->
     </div>
     <!-- E 图片列表显示区域 -->
 
@@ -73,7 +72,7 @@
 
 </template>
 <script lang='ts' setup>
-import { watchEffect, computed, ref, defineEmits, watch, onMounted } from 'vue';
+import { watchEffect, computed, ref, Ref, defineEmits, watch, onMounted, nextTick } from 'vue';
 import type { UploadProps, UploadUserFile } from 'element-plus';
 import { ElForm, ElMessage, ElMessageBox, UploadRequestOptions } from 'element-plus';
 import { uploadImg } from '@/api/upload/uploadFile';
@@ -87,6 +86,13 @@ const prop = defineProps({
       return '上传图片';
     }
   },
+  limitSize: {
+    type: String,
+    default: () => {
+      return '2';
+    }
+  },
+
   uploadImgList: {
     type: Array,
     default: () => {
@@ -114,31 +120,32 @@ const prop = defineProps({
 });
 
 
-const dialogVisible: boolean = ref(false);
-const dialogImg: string = ref('');
-const uploadImgUrl: String[] = ref([]);
+const dialogVisible: Ref<boolean> = ref(false);
+const dialogImg: Ref<string> = ref('');
+const uploadImgUrl: Ref<{ url: string }[]> = ref([]);
+
 const supportType = ['image/jpeg', 'image/jpg', 'image/png'];
 
 /**
  * 上传图片接口
  * @param param
  */
-const httpRequest = (param: UploadRequestOptions): Promise<any> => {
+const httpRequest = async (param: UploadRequestOptions): Promise<void> => {
   const isLt10M = param.file.size / 1024 / 1024 < 4;
   /* 对上传图片的大小和格式校验 */
+  let supportType: string[] = ['image/png', 'image/jpeg', 'image/gif'];
   if (supportType.indexOf(param.file.type) == -1) {
-    let supportType = supportType;
     let msg = '';
     supportType.map(res => {
       msg += res.substring(6) + '/';
     });
     let newMsg = msg.slice(0, (msg.length) - 1);
     ElMessage.error(`请上传正确的文件格式！支持的格式有：` + newMsg);
-    return;
+    return Promise.resolve();
   }
   if (!isLt10M) {
-    ElMessage.error(`上传图片大小不能超过 ${limitSize} MB!`);
-    return;
+    ElMessage.error(`上传图片大小不能超过 ${prop.limitSize} MB!`);
+    return Promise.resolve();
   }
 
   const form = new FormData();
@@ -179,7 +186,7 @@ const deleteImg = (item: any) => {
 /**
  *  打开图片对话框
  */
-const showImgDialog = (item) => {
+const showImgDialog = (item: any) => {
   dialogVisible.value = true;
   dialogImg.value = item.url;
 };
@@ -187,10 +194,33 @@ const showImgDialog = (item) => {
 
 const fileList = ref<UploadUserFile[]>([]);
 
-watch(
-  () => prop.uploadImgList,
-  (newVal, oldVal) => {
-    uploadImgUrl.value = newVal;
-  }, { deep: true, immediate: true }
+watch(prop, (val) => {
+    uploadImgUrl.value = val.uploadImgList.filter((item: { url: string }) => {
+      return item.url !== '';
+    });
+  }, {
+    // 页面加载会先执行一次
+    immediate: true
+  }
 );
+
+// watch(
+//   () => prop.uploadImgList,
+//   (newVal: { url: string }[], oldVal: { url: string }[]) => {
+//     uploadImgUrl.value = Array.from(newVal);
+//   },
+//   { deep: true, immediate: true }
+// );
+
+onMounted(() => {
+
+});
+
+
+// watchEffect(() => {
+//   nextTick(() => {
+//     uploadImgUrl.value = prop.uploadImgList as { url: string }[];
+//   });
+// });
+
 </script>

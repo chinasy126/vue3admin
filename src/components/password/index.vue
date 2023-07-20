@@ -60,14 +60,16 @@ const ruleForm = reactive({
   confirmPassword: ''
 });
 
-const checkNewpassword = (rule, value, callback) => {
+
+
+const checkNewpassword = (rule: any, value: string, callback:any) => {
   if (value === '' || value.length < 6) {
     return callback(new Error('确认密码最小为6位数'));
   }
   return callback();
 };
 
-const checkConfirmPassword = (rule, value, callback) => {
+const checkConfirmPassword = (rule:any, value:string, callback:any) => {
   if (value === '' || value.length < 6) {
     return callback(new Error('确认密码最小为6位数'));
   }
@@ -77,19 +79,19 @@ const checkConfirmPassword = (rule, value, callback) => {
   return callback();
 };
 
-const checkOldpassword = async (rule: any, value: string, callback: Function) => {
+const checkOldpassword = async (rule: any, value: string, callback: any) => {
   if (value === '') {
     return callback(new Error('请输入旧密码!'));
   }
   const postData: UserOldPassword = { 'password': value };
-  const result = await checkOldPassword(postData);
+  const result:any = await checkOldPassword(postData);
   if (result.code !== 20000) {
     return callback(new Error('旧密码输入错误!'));
   }
   return callback();
 };
 
-const rules = reactive<FormRules>({
+const rules = reactive<any>({
   oldPassword: [
     { required: true, message: '请输入旧密码!', trigger: 'blur' },
     { validator: checkOldpassword, trigger: 'blur' }
@@ -121,7 +123,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
           .then(() => {
             setTimeout(() => {
               router.push(`/login?redirect=${route.fullPath}`);
-            },1000);
+            }, 1000);
           });
       });
     } else {

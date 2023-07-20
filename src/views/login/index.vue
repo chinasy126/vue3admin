@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import {onMounted, reactive, ref, toRefs, watch, nextTick} from 'vue';
-
+import {getToken, setToken, removeToken} from '@/utils/auth';
 // 组件依赖
 import {ElForm, ElInput} from 'element-plus';
 import router from '@/router';
@@ -110,9 +110,6 @@ const route = useRoute();
 
 const loginFormRef = ref(ElForm);
 const passwordRef = ref(ElInput);
-
-import {getToken, setToken, removeToken} from '@/utils/auth';
-import * as console from "console";
 
 const state = reactive({
   imgSrc: '',

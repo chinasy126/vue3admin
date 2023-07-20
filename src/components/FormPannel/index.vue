@@ -18,7 +18,7 @@
         <slot :name="index"></slot>
         <el-form-item :label="item.label" :prop="item.prop">
           <template v-if="item.type === 'input'">
-            <el-input v-model="opFormModel[item.prop]" clearable/>
+            <el-input v-model="opFormModel[item.prop]" clearable :disabled='item.disabled'/>
           </template>
           <template v-if="item.type === 'textarea'">
             <el-input v-model="opFormModel[item.prop]" type="textarea" clearable/>
@@ -29,8 +29,16 @@
           <template v-if="item.type === 'number'">
             <el-input-number v-model="opFormModel[item.prop]"></el-input-number>
           </template>
+          <template v-if="item.type === 'password'">
+            <el-input
+              v-model="opFormModel[item.prop]"
+              type="password"
+              show-password
+            />
+          </template>
           <template v-if="item.type === 'select'">
-            <el-select v-model="opFormModel[item.prop]" placeholder="请选择" filterable clearable>
+            <el-select v-model="opFormModel[item.prop]" placeholder="请选择" filterable
+                       clearable>
               <el-option v-for="slectItem in item.selectValue"
                          :key="slectItem.value"
                          :label="slectItem.label"
@@ -56,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import {onBeforeMount, onMounted, reactive, ref, toRefs, watch} from "vue";
+import {onBeforeMount, onMounted, reactive, ref, toRefs, watch, watchEffect} from 'vue';
 import {isNull} from "@/utils";
 import {defineProps} from 'vue'
 import {insertData} from "@/api/permission/user";
@@ -111,12 +119,12 @@ const prop = defineProps({
     }
   },
 
-  opCustomFormItems: {
-    type: Object,
-    default: () => {
-      return {}
-    }
-  }
+  // opCustomFormItems: {
+  //   type: Object,
+  //   default: () => {
+  //     return {}
+  //   }
+  // }
 
 })
 
@@ -142,15 +150,21 @@ function closeForm() {
  *  获取表单每一项目
  */
 const getFormProp = () => {
-  let obj = {}
-  prop.opFormItems.forEach(item => {
+  let obj: { [key: string]: any } = {};  // 使用字符串索引签名的对象类型
+  let opFormItemsInfo: any[] = prop.opFormItems.map((item: any) => {
+    if (typeof (item.disabled) === 'undefined')
+      item.disabled = false
+    return item
+  })
+  opFormItemsInfo.forEach((item: any) => {
     if (item.type === 'number') {
       obj[item.prop] = item.value === '' ? 0 : parseInt(item.value)
     } else {
       if (typeof (item.showValue) !== 'undefined' && item.showValue === false) {
         obj[item.prop] = ''
       } else {
-        obj[item.prop] = isNull(item.value)
+        obj[item.prop] = typeof (item.value) !== "undefined" ? item.value : ''
+        // obj[item.prop] = isNull(item.value)
       }
     }
   })
@@ -172,12 +186,16 @@ const submitForm = () => {
         } else {
           ElMessage({message: `${result.message}`, grouping: true, type: 'error',})
         }
-      } catch (e) {
-        console.error(e)
-      } finally {
         opFormBtnLoading.value = false
         opFormDialog.visible = false
         emit('onFormSubmit', params);
+      } catch (e) {
+        opFormBtnLoading.value = false
+        console.error(e)
+      } finally {
+        // opFormBtnLoading.value = false
+        // opFormDialog.visible = false
+        // emit('onFormSubmit', params);
       }
 
     }
@@ -188,6 +206,7 @@ watch(() => prop.opFormItems, (newVal, oldVal) => {
   // 匹配表单每一项
   getFormProp()
 }, {deep: true, immediate: true})
+
 
 onMounted(() => {
 

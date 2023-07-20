@@ -16,16 +16,23 @@
 
 <script setup lang='ts'>
 
-import { onBeforeUnmount, shallowRef, reactive, toRefs } from 'vue';
+import { onBeforeUnmount, shallowRef, reactive, toRefs, watch, watchEffect, nextTick, onMounted, ref } from 'vue';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
 import { uploadImg } from '@/api/upload/uploadFile';
 // API 引用
 import { uploadFileApi } from '@/api/file';
+import { UploadUserFile } from 'element-plus';
 
 const props = defineProps({
   modelValue: {
     type: [String],
     default: ''
+  },
+  value: {
+    type: String,
+    default: () => {
+      return '';
+    }
   }
 });
 
@@ -34,39 +41,52 @@ const emit = defineEmits(['update:modelValue']);
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef();
 
+const editorConfig = ref({
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      // 自定义图片上传
+      async customUpload(file: any, insertFn: any) {
+
+        const form = new FormData();
+        form.append('file', file);
+        form.append('type', 'editor'); // 文件类型拆分文件夹
+
+        const result = await uploadImg(form, {
+          // 因为我们上传了图片,因此需要单独执行请求头的Content-Type
+          headers: {
+            // 表示上传的是文件,而不是普通的表单数据
+            'Content-Type': 'multipart/form-data',
+            'X-Token': window.localStorage.getItem('token')
+          }
+        });
+        insertFn(result.data.file);
+      }
+
+
+    }
+  }
+})
+
 const state = reactive({
   toolbarConfig: {},
-  editorConfig: {
-    placeholder: '请输入内容...',
-    MENU_CONF: {
-      uploadImage: {
-        // 自定义图片上传
-        async customUpload(file: any, insertFn: any) {
 
-          const form = new FormData();
-          form.append('file', file);
-          form.append('type', 'editor'); // 文件类型拆分文件夹
-
-          const result = await uploadImg(form, {
-            // 因为我们上传了图片,因此需要单独执行请求头的Content-Type
-            headers: {
-              // 表示上传的是文件,而不是普通的表单数据
-              'Content-Type': 'multipart/form-data',
-              'X-Token': window.localStorage.getItem('token')
-            }
-          });
-          insertFn(result.data.file);
-        }
-
-
-      }
-    }
-  },
   defaultHtml: props.modelValue,
   mode: 'default'
 });
 
-const { toolbarConfig, editorConfig, defaultHtml, mode } = toRefs(state);
+watch(() => props.modelValue, (newVal, oldVal) => {
+  state.defaultHtml = newVal
+}, { deep: true, immediate: true });
+
+// watchEffect(() => {
+//   nextTick(() => {
+//   state.defaultHtml = props.modelValue
+//     console.log(props.modelValue,'====')
+//   });
+// });
+
+const { toolbarConfig,  defaultHtml, mode } = toRefs(state);
 
 const handleCreated = (editor: any) => {
   editorRef.value = editor; // 记录 editor 实例，重要！
@@ -76,6 +96,10 @@ function handleChange(editor: any) {
   emit('update:modelValue', editor.getHtml());
 }
 
+
+onMounted(()=>{
+
+})
 
 // 组件销毁时，也及时销毁编辑器
 onBeforeUnmount(() => {

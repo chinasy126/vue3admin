@@ -13,12 +13,17 @@ export const permission: Directive = {
 
     const rouBtnList = permissionButton.find(item => item.name === currentRouter.name); // 缓存中拿到当前路由按钮信息
 
+    if (permissionButton.length === 0) {
+      el.parentNode && el.parentNode.removeChild(el);
+      return true;
+    }
+
     // 获取路由META信息
     const { value } = binding;
     // let btnPermissions: any[] = router.currentRoute.value.meta.btnPermissions;
     const btnPermissions = rouBtnList.menubuttonList;
     if (value && btnPermissions && btnPermissions.length !== 0) {
-      const hasPermission:Boolean = btnPermissions.some( (role: { type: any; }) => {
+      const hasPermission: Boolean = btnPermissions.some((role: { type: any; }) => {
         return value.includes(role.type);
       });
       if (!hasPermission) {

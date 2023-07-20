@@ -99,7 +99,7 @@ export function deleteMenus(ids: string) {
 /**
  * 删除按钮
  */
-export function deleteBtn(params){
+export function deleteBtn(params:any){
   return request({
     url: `/menubutton/delete`,
     method: 'post',

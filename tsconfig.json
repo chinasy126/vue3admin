@@ -26,6 +26,6 @@
       "./types"
     ] /* 指定多个文件夹，这些文件夹的作用类似于 './node_modules/@types'. */
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts" , "src/sortablejs.d.ts"],
   "exclude": ["node_modules", "dist", "**/*.js"]
 }

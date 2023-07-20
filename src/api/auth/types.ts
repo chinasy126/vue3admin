@@ -4,6 +4,7 @@
 export interface LoginData {
   username: string;
   password: string;
+  code:string;
   /**
    * 验证码Code
    */

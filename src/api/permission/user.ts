@@ -53,3 +53,17 @@ export function saveOrUpdate(param: UserForm) {
     data: param
   })
 }
+
+
+/**
+ * 批量删除
+ * @param params
+ */
+
+export function batchDelete(params: number[]) {
+  return request({
+    url: `/${urlPrefix}/batchDelete`,
+    method: 'delete',
+    data: params
+  });
+};

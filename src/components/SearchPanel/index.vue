@@ -55,10 +55,12 @@
 <script setup lang="ts">
 import {defineProps, ref, defineExpose} from "vue";
 import {FormInstance} from "element-plus";
+import { ItemType } from './type'
+import * as dns from 'dns';
 // 有多少列的宽度
 const spanNum = ref(6);
 // 搜索每一项值
-let searchForm = ref({})
+let searchForm:any = ref({})
 // 表单实例
 const searchFormRef = ref<FormInstance>()
 
@@ -68,18 +70,22 @@ const emit = defineEmits(['onSearch'])
  * 点击搜索
  */
 const handlerEventSearch = () => {
-  const params = {}
-  prop.itemList.forEach(item => {
+  const params: { [key: string]: string } = {}; // Assuming the values in `params` will be strings
+
+  prop.itemList.forEach((item: any) => {
     switch (item.type) {
       case 'input':
-        params[item.prop] = searchForm.value[item.prop]
-        break
+        params[item.prop] = searchForm.value[item.prop];
+        break;
       case 'date':
-        params[item.prop] = searchForm.value[item.prop]
+        params[item.prop] = searchForm.value[item.prop];
+        break;
     }
-  })
-  emit('onSearch', params)
-}
+  });
+
+  emit('onSearch', params);
+};
+
 /**
  * 表单重置
  * @param formEl
@@ -87,7 +93,7 @@ const handlerEventSearch = () => {
 const handlerReset = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
-  this.$emit('reset') //清除slot内嵌的form元素数据
+  // this.$emit('reset','') //清除slot内嵌的form元素数据
 }
 
 const prop = defineProps({

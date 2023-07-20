@@ -14,11 +14,10 @@
 
     <!-- S 列表面板 -->
     <TablePannel
-      :rowKey='record => record.id'
+      :rowKey='(record:any) =>{ return  record.id}'
       :columns='columns'
       :data-source='dataSource'
       @selection-change='handleSelectionChange'
-      :row-key='record => record.id'
       :table-loading='searchBtnLoading'
     >
       <template #roleMenus='{scope}'>
@@ -73,16 +72,25 @@
 </template>
 
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, Ref } from 'vue';
 import { ElForm } from 'element-plus';
-
-const searchFormRef = ref(ElForm); // 重置
-const insertFormDataRef = ref(ElForm);
-
 // S 搜索+表格
 import TablePannel from '@/components/TablePannel/index.vue';
 import SearchPanel from '@/components/SearchPanel/index.vue';
 import queryListComponent from '@/mixins/queryListComponent';
+import FormPannel from '@/components/FormPannel/index.vue';
+import opFormComponent from '@/mixins/opFormComponent';
+import CommonAction from '@/components/CommonAction/index.vue';
+import comActionComponent from '@/mixins/comActionComponent';
+import RolePermission from './RolePermission.vue';
+import { allMultilevelClassification } from '@/api/permission/menu/index';
+import { getRolePages, insertRole, modifyRole, deleteData } from '@/api/permission/role';
+import { RoleMenu } from '@/views/permission/role/type';
+
+const searchFormRef = ref(ElForm); // 重置
+const insertFormDataRef = ref(ElForm);
+
+
 // 解构方法
 const {
   getListFnName,
@@ -98,23 +106,15 @@ const {
   handleSelectionChange
 } = queryListComponent();
 // E 搜索+表格
-import FormPannel from '@/components/FormPannel/index.vue';
-import opFormComponent from '@/mixins/opFormComponent';
+
 
 let { opFormDialog, opFnName, onFormSubmit, opCloseForm, opFormItems } = opFormComponent();
 // E 新增+修改
 // S 弹框操作
-import CommonAction from '@/components/CommonAction/index.vue';
-import comActionComponent from '@/mixins/comActionComponent';
-
 const { comActionDialog, comActionCondition, comFnName } = comActionComponent();
 // E 弹框操作
-import RolePermission from './RolePermission.vue';
+
 // 调取API
-import { allMultilevelClassification } from '@/api/permission/menu/index';
-import { getRolePages, insertRole, modifyRole, deleteData } from '@/api/permission/role';
-
-
 const searchPannelList = ref([
   { type: 'input', name: '角色名称', prop: 'roleName' }
 ]);
@@ -134,7 +134,7 @@ const opFormRules = ref({
 
 const menuDataList = ref([]); // 菜单复选框
 // 菜单复选框默认选择
-const defaultCheckedKeys = ref([]);
+const defaultCheckedKeys: Ref<any[]> = ref([]);
 const tree = ref(ElForm);
 // 插槽的表单内容
 const opCustomFormItems = ref({});
@@ -143,13 +143,34 @@ const opCustomFormItems = ref({});
  * @param opera
  * @param param
  */
-const opearDialog = async (opera, param) => {
+const opearDialog = async (opera: string, param: any) => {
+  //console.log(opCustomFormItems.value,'*****')
+
+  /**
+   *  菜单按钮
+   */
+   const roleMeus:any[] = (function() {
+    let mItemArr: { menuId: number; menuTitle: string; rolebuttonsList: any[] }[] = [];
+    if (param !== "" && param.roleMenus.length !== 0) {
+      mItemArr = param.roleMenus.map((item: RoleMenu) => {
+        let mItem : any = {}
+        mItem.menuId = item.menuId;
+        mItem.menuTitle = item.menuTitle;
+        mItem.rolebuttonsList = item.rolebuttonsList;
+        return mItem;
+      });
+    }
+    return mItemArr;
+  })();
+
+  opCustomFormItems.value = {'roleMenus':roleMeus}
+
   defaultCheckedKeys.value = [];
   await getAllmenus();
   let arrayDefaultCheck = [];
   if (opera === 'add') {
     opFnName.value = insertRole;
-    opFormItems.value = opFormItems.value.map(item => {
+    opFormItems.value = opFormItems.value.map((item: any) => {
       item.value = '';
       return item;
     });
@@ -158,7 +179,7 @@ const opearDialog = async (opera, param) => {
 
   } else if (opera === 'edit') {
     opFnName.value = modifyRole;
-    opFormItems.value = opFormItems.value.map(item => {
+    opFormItems.value = opFormItems.value.map((item: any) => {
       item.value = param[item.prop];
       return item;
     });
@@ -183,7 +204,7 @@ const opearDialog = async (opera, param) => {
     let btnBelongList: any[] = [];
     if (menuList && menuList.length !== 0) {
       menuList.forEach(item => {
-        const btns: any[] = item.rolebuttonsList.map(i => {
+        const btns: any[] = item.rolebuttonsList.map((i: any) => {
           return `${item.menuId},${item.menuTitle},${i.buttonType},${i.buttonName}`;
         });
         btnBelongList.push(...btns);
@@ -199,14 +220,14 @@ const opearDialog = async (opera, param) => {
  *  操作后刷新列表
  */
 const refreshList = () => {
-  comActionDialog.value = { visible: false };
+  comActionDialog.value = { title: '', visible: false, buttonTitle: '', message: '' };
   getItemList();
 };
 
 /**
  *  删除
  */
-const comDelete = params => {
+const comDelete = (params: any) => {
   comFnName.value = deleteData;
   comActionDialog.value = {
     title: '删除',
@@ -222,9 +243,9 @@ const comDelete = params => {
  * @param title
  * @param data
  */
-const getBtnList = (title, data) => {
+const getBtnList = (title: string, data: any) => {
   if (data.menubuttonList && data.menubuttonList.length !== 0) {
-    return data.menubuttonList.map(item => {
+    return data.menubuttonList.map((item: any) => {
       return {
         id: title + ',' + item.type + ',' + item.name,
         label: item.name
@@ -239,12 +260,12 @@ const getBtnList = (title, data) => {
  */
 const getAllmenus = async () => {
   const { data } = await allMultilevelClassification();
-  menuDataList.value = data.data.map(item => {
-    let res = {};
+  menuDataList.value = data.data.map((item: any) => {
+    let res: { id: string; label: string; children: any[] } = { id: '', label: '', children: [] };
     res.id = item.id + ',' + item.title;
     res.label = item.title;
     res.children = [];
-    item.children.forEach(it => {
+    item.children.forEach((it: any) => {
       let title = it.id + ',' + it.title;
       res.children.push({
         id: title,
@@ -277,10 +298,10 @@ const handleCheckChange = () => {
 /**
  *  获取当前菜单下边的按钮
  */
-const insertBunList = (data, menuList) => {
-  let res = menuList.filter(item => {
+const insertBunList = (data: any, menuList: any[]) => {
+  let res = menuList.filter((item: any) => {
     return item.indexOf(data) > -1 && item !== data;
-  }).map(item => {
+  }).map((item: any) => {
     let arr = item.split(',');
     return {
       'buttonName': arr[3],

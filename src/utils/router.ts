@@ -138,7 +138,7 @@ export const filterAsyncRoute = (routes: any[]) => {
     routes.forEach(routerItem => {
       if (routerItem.fid === 0) {
         const firMenuItem: any = dynamicRoutes.find(i => {
-          return i?.name?.toLowerCase() === routerItem.name.toLowerCase();
+          return i?.name?.toString().toLowerCase() === routerItem.name.toLowerCase();
         });
         // 设置二级菜单
         firMenuItem.children = getSecMenuList(firMenuItem.children, routes);

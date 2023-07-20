@@ -126,7 +126,7 @@ export function batchDelete(params: Number[]) {
 
 
 export function importFileData(param: any, config: any, callback: any) {
-  console.log(config)
+  console.log(config);
 
   return request({
     url: `/news/import`,

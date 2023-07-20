@@ -1,4 +1,4 @@
-import { defineComponent, h, defineEmits } from 'vue';
+import { defineComponent, h } from 'vue';
 import { ElTag } from 'element-plus';
 import { defineProps, defineEmits } from 'vue';
 
@@ -54,7 +54,7 @@ export default defineComponent({
   render() {
     let _this = this;
     return h(
-      ElTag,
+      '',
       {
         style: { marginRight: '10px' },
         type: getTagType(this.btnType),

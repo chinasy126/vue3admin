@@ -53,6 +53,10 @@ export interface UserForm {
   avatar:string;
 }
 
+export interface UserImportData{
+
+}
+
 
 
 export interface UserOldPassword{
@@ -60,6 +64,6 @@ export interface UserOldPassword{
 }
 
 
-export interface avatarModify{
-  avatar:string
+export interface avatarModify {
+  avatar: string;
 }

@@ -190,11 +190,11 @@ export function modifyPassword(data:UserOldPassword) {
   });
 }
 
-export function setUserAvator(data:avatarModify) {
+export function setUserAvator(data: avatarModify) {
   return request({
     url: '/user/setavator',
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 

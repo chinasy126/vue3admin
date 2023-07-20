@@ -38,3 +38,28 @@ export interface RoleForm {
    */
   dataScope: number;
 }
+
+
+/**
+ * 用户菜单权限
+ */
+
+export interface RoleMenus {
+  id?: number;
+  roleId: number;
+  menuId:number;
+  menuTitle:string;
+  menuFid:number;
+  menuButton:string;
+  rolebuttonsList:Rolebuttons[];
+}
+
+
+export interface Rolebuttons {
+  id?: number;
+  roleMenuId: number;
+  buttonName:string;
+  buttonType:string;
+  roleId:number;
+  menuId:number
+}

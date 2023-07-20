@@ -69,7 +69,7 @@ const prop = defineProps({
 const comConfirm = () => {
 
   comActionBtnLoading.value = true
-  prop.comFnName(prop.comActionCondition).then((res) => {
+  prop.comFnName(prop.comActionCondition).then((res:any) => {
     if (res.code === 20000) {
       ElMessage({
         message: `操作成功`,
@@ -83,7 +83,7 @@ const comConfirm = () => {
         type: 'error',
       })
     }
-  }).catch((e) => {
+  }).catch((e:string) => {
     ElMessage({
       message: `${e}`,
       type: 'error',

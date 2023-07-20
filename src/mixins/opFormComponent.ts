@@ -18,7 +18,7 @@ const opFormComponent = () => {
 //  const {opFormDialog, opFormItems, opFnName, opFormBtnLoading, opFormRules} = toRefs(opForm)
 
   const opFormDialog = ref({title: '操作', visible: false, buttonTitle: '添加'})
-  const opFormItems = ref([])
+  const opFormItems =  ref<any[]>([]) ; //ref([])
   const opFnName = ref()
   const opFormBtnLoading = ref(false)
   const opFormRules = ref([])

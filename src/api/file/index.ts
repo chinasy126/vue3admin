@@ -11,7 +11,7 @@ export function uploadImg(data: any, config: any) {
   });
 }
 
-export function uploadFileApi(data: any, config: any): AxiosPromise<FileInfo> {
+export function uploadFileApi(data: any, config: any = {}): AxiosPromise<FileInfo> {
   return request({
     url: `/upload/pictures`,
     method: 'post',

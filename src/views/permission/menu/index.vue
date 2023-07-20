@@ -18,14 +18,16 @@
 
     <!-- S 列表面板 -->
     <TablePannel
-      :rowKey='record => record.id'
+      :draggable='true'
+      v-if='tableVisible'
+      :rowKey='(record:any) =>{ return  record.id}'
       :columns='columns'
       :data-source='dataSource'
       @selection-change='handleSelectionChange'
       @changeSize='changeSize'
       @changeNum='changeNum'
-      :row-key='record => record.id'
       :table-loading='searchBtnLoading'
+      @moveIndex='moveSortFn'
     >
       <template #menubuttonList='{scope:{menubuttonList}}'>
         <template v-for='(item,index) in menubuttonList'>
@@ -46,53 +48,59 @@
     <Page :total='totalCount' :pageNum='pageNum' :pageSize='pageSize' @changeSize='changeSize'
           @changeNum='changeNum'></Page>
     <!-- S 新增编辑 -->
+
     <FormPannel
       :opFormRules='opFormRules'
       :opFormDialog='opFormDialog'
       :opFormItems='opFormItems'
       :opCustomFormItems='opCustomFormItems'
       :opFnName='opFnName'
+      @onChangeSelect='onChangeMenuSelect'
       @opCloseForm='opCloseForm'
       @onFormSubmit='onSubmit'
     >
-      <template v-slot:-1>
-        <template v-if='showMenuBtnVisible'>
-          <!-- 一级菜单 -->
-          <el-form-item label='父级菜单'>
-            <el-select @change='getSecondsMenuByMenuId' v-model='opCustomFormItems.firMenuId' placeholder='请选择'
-                       clearable
-            >
-              <el-option
-                v-for='item in firMenuList'
-                :key='item.id'
-                :label='item.title'
-                :value='item.id'
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <!-- 二级菜单 -->
-          <el-form-item label='二级菜单'>
-            <el-select v-model='opCustomFormItems.menuId' placeholder='请选择' clearable>
-              <el-option
-                v-for='item in secMenuList'
-                :key='item.id'
-                :label='item.title'
-                :value='item.id'
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <!-- 按钮名称 -->
-          <el-form-item label='按钮名称' prop='name'>
-            <el-input v-model='opCustomFormItems.name' clearable />
-          </el-form-item>
-          <!-- 按钮type -->
-          <el-form-item label='按钮type' prop='name'>
-            <el-input v-model='opCustomFormItems.type' clearable />
-          </el-form-item>
-        </template>
-      </template>
+      <!--      <template v-slot:-1>-->
+      <!--        <template v-if='showMenuBtnVisible'>-->
+      <!--          &lt;!&ndash; 一级菜单 &ndash;&gt;-->
+      <!--          <el-form-item label='父级菜单' prop='parentMenu'-->
+
+      <!--          >-->
+      <!--            <el-select @change='getSecondsMenuByMenuId' v-model='opCustomFormItems.parentMenu' placeholder='请选择'-->
+      <!--                       clearable-->
+      <!--            >-->
+      <!--              <el-option-->
+      <!--                v-for='item in firMenuList'-->
+      <!--                :key='item.id'-->
+      <!--                :label='item.title'-->
+      <!--                :value='item.id'-->
+      <!--              >-->
+      <!--              </el-option>-->
+      <!--            </el-select>-->
+      <!--          </el-form-item>-->
+      <!--          &lt;!&ndash; 二级菜单 &ndash;&gt;-->
+      <!--          <el-form-item label='二级菜单' prop='menuId'>-->
+      <!--            <el-select v-model='opCustomFormItems.menuId' placeholder='请选择' clearable>-->
+      <!--              <el-option-->
+      <!--                v-for='item in secMenuList'-->
+      <!--                :key='item.id'-->
+      <!--                :label='item.title'-->
+      <!--                :value='item.id'-->
+      <!--              >-->
+      <!--              </el-option>-->
+      <!--            </el-select>-->
+      <!--          </el-form-item>-->
+      <!--          &lt;!&ndash; 按钮名称 &ndash;&gt;-->
+      <!--          <el-form-item label='按钮名称' prop='name'>-->
+      <!--            <el-input v-model='opCustomFormItems.name' clearable />-->
+      <!--          </el-form-item>-->
+      <!--          &lt;!&ndash; 按钮type                          :rules="[{ required: true, message: '请选输入按钮类别', trigger: 'blur' }]"-->
+      <!-- &ndash;&gt;-->
+      <!--          <el-form-item label='按钮type' prop='type'-->
+      <!--          >-->
+      <!--            <el-input v-model='opCustomFormItems.type' clearable />-->
+      <!--          </el-form-item>-->
+      <!--        </template>-->
+      <!--      </template>-->
     </FormPannel>
 
     <!-- E 新增编辑 -->
@@ -110,22 +118,39 @@
 </template>
 
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue';
+import { onMounted, Ref, ref } from 'vue';
 import { ElForm, ElMessage } from 'element-plus';
+import TablePannel from '@/components/TablePannel/index.vue';
+import SearchPanel from '@/components/SearchPanel/index.vue';
+// E 搜索+表格
+//import FormPannel from '@/components/FormPannel/index.vue';
+import opFormComponent from '@/mixins/opFormComponent';
+import FormPannel from '@/components/FormPannel/FormPannel.vue';
+import Perbutton from '@/components/Permission/Button/index.vue';
+// import Perbutton from '@/components/Permission/Button/perButton';
+import CommonAction from '@/components/CommonAction/index.vue';
+import comActionComponent from '@/mixins/comActionComponent';
+import queryListComponent from '@/mixins/queryListComponent';
+import { dynamicRoutes } from '@/router/index';
+import {
+  menuList,
+  allMultilevelClassification,
+  batchMenuSave,
+  dataDelete,
+  category,
+  getSecMenuList,
+  saveOrUpdate, indertBtn, dataBatchDelete
+} from '@/api/permission/menu/index';
+import { deleteBtn } from '@/api/permission/role';
 
 const searchFormRef = ref(ElForm); // 重置
 const insertFormDataRef = ref(ElForm);
-
+const categoryAllList:Ref<any[]> = ref([]);
+// 展示添加按钮表单
 const showMenuBtnVisible = ref<Boolean>(false);
 
 // S 搜索+表格
-import TablePannel from '@/components/TablePannel/index.vue';
-import SearchPanel from '@/components/SearchPanel/index.vue';
 
-import Perbutton from '@/components/Permission/Button/index.vue';
-// import Perbutton from '@/components/Permission/Button/perButton';
-
-import queryListComponent from '@/mixins/queryListComponent';
 
 // 解构方法
 const {
@@ -142,34 +167,19 @@ const {
   changeNum,
   handleSelectionChange
 } = queryListComponent();
-// E 搜索+表格
-//import FormPannel from '@/components/FormPannel/index.vue';
-import opFormComponent from '@/mixins/opFormComponent';
-import FormPannel from '@/components/FormPannel/FormPannel.vue';
+
+
+// 刷新table
+
+const tableVisible: Ref<boolean> = ref(true);
 
 let { opFormDialog, opFnName, onFormSubmit, opCloseForm, opFormItems } = opFormComponent();
 // E 新增+修改
 // S 弹框操作
-import CommonAction from '@/components/CommonAction/index.vue';
-import comActionComponent from '@/mixins/comActionComponent';
-
 const { comActionDialog, comActionCondition, comFnName } = comActionComponent();
 // E 弹框操作
 
 // 调取API
-
-import {
-  menuList,
-  allMultilevelClassification,
-  batchMenuSave,
-  dataDelete,
-  category,
-  getSecMenuList,
-  saveOrUpdate, indertBtn, dataBatchDelete
-} from '@/api/permission/menu/index';
-import { deleteBtn } from '@/api/permission/role';
-
-
 const searchPannelList = ref([
   { type: 'input', name: '菜单名称', prop: 'title' }
 ]);
@@ -183,69 +193,106 @@ const columns = ref([
   { label: '操作', isSlot: true, prop: 'operation', width: 170, fixed: 'right', dataIndex: '', align: 'center' }
 ]);
 // 正则验证
-const opFormRules = ref({
-  roleName: [{ required: true, message: '请选输入角色名称', trigger: 'blur' }],
-  roleDesc: [{ required: true, message: '请选输入角色描述', trigger: 'blur' }]
-});
+const opFormRules = ref({});
 
 const menuDataList = ref([]); // 菜单复选框
 // 菜单复选框默认选择
-const defaultCheckedKeys = ref([]);
+const defaultCheckedKeys: Ref<any[]> = ref([]);
 const tree = ref(ElForm);
 // 插槽的表单内容
-const opCustomFormItems = ref({});
-/**
- * 新增修改操作
- * @param opera
- * @param param
- */
-const opearDialog = async (opera, param) => {
-  getAddFormItem();
-  defaultCheckedKeys.value = [];
-  // await getAllmenus();
-  let arrayDefaultCheck = [];
+const opCustomFormItems: any = ref({});
 
+
+// 编辑表单的项目
+const opAddFormItems = [
+  { prop: 'id', value: '' },
+  { label: '父级菜单', prop: 'parentMenu', type: 'select' },
+  { label: '菜单名称', prop: 'title', type: 'input' },
+  { label: '菜单Name', prop: 'name', type: 'input' },
+  { label: '菜单排序', prop: 'menuOrder', type: 'number', value: 0 }
+];
+
+// 获取所有分类并且设置
+
+const setAllCategory = async () => {
   const { data: { data: categoryList } } = await category();
-  opFormItems.value[1].selectValue = categoryList.map(item => {
+  return categoryList;
+};
+
+/**
+ *
+ * 转换下拉框分类
+ *
+ */
+const getSelectCategory = async () => {
+  const categoryList = await setAllCategory();
+  categoryAllList.value = categoryList;
+  return categoryList.map((item: any) => {
     return {
       value: item.id,
       label: item.title
     };
   });
-  opFnName.value = saveOrUpdate;
-  if (opera === 'add') {
-    opFormItems.value = opFormItems.value.map(item => {
-      item.value = '';
-      return item;
-    });
-    opFormDialog.value.title = '新增';
-    opFormDialog.value.buttonTitle = '新增';
+};
 
-  } else if (opera === 'edit') {
-    opFormItems.value = opFormItems.value.map(item => {
-      item.value = param[item.prop];
-      return item;
-    });
 
-    opFormDialog.value.title = '修改';
-    opFormDialog.value.buttonTitle = '修改';
-  }
-  defaultCheckedKeys.value = arrayDefaultCheck;
-  opFormDialog.value.visible = true;
+/**
+ * 新增修改操作
+ * @param opera
+ * @param param
+ */
+const opearDialog = async (opera: string, param: any) => {
+  opFormItems.value = [];
+  opFormRules.value = {};
+  // 设置表单内容
+  setTimeout(async () => {
+    // 用户区别一级菜单，二级菜单
+    showMenuBtnVisible.value = false;
+    // 表演验证规则
+    opFormRules.value = {
+      title: [{ required: true, message: '请选输入菜单名称', trigger: 'blur' }],
+      name: [{ required: true, message: '请选输入菜单name', trigger: 'blur' }]
+    };
+    opFormItems.value = opAddFormItems;
+    // 设置下拉框
+    opFormItems.value[1].selectValue = await getSelectCategory();
+    // 设置保存方法
+    opFnName.value = saveOrUpdate;
+    if (opera === 'add') {
+      // 新增操作
+      opFormItems.value = opFormItems.value.map(item => {
+        item.value = item.prop !== 'menuOrder' ? '' : 0;
+        return item;
+      });
+      opFormDialog.value.title = '新增';
+      opFormDialog.value.buttonTitle = '新增';
+    } else if (opera === 'edit') {
+      // 赋值初始值
+      opFormItems.value = opFormItems.value.map(item => {
+        item.value = param[item.prop];
+        return item;
+      });
+      opFormDialog.value.title = '修改';
+      opFormDialog.value.buttonTitle = '修改';
+    }
+    opFormDialog.value.visible = true;
+  });
+
 };
 
 /**
  *  操作后刷新列表
  */
 const refreshList = () => {
-  comActionDialog.value = { visible: false };
+  // comActionDialog.value = { visible: false };
+  comActionDialog.value.visible = false;
   getItemList();
 };
 
 /**
  *  删除
  */
-const comDelete = params => {
+const comDelete = (params: any) => {
   comFnName.value = dataDelete;
   comActionDialog.value = {
     title: '删除',
@@ -256,84 +303,12 @@ const comDelete = params => {
   comActionCondition.value = { id: params.id };
 };
 
-/**
- * 获取按钮列表
- * @param title
- * @param data
- */
-const getBtnList = (title, data) => {
-  if (data.menubuttonList && data.menubuttonList.length !== 0) {
-    return data.menubuttonList.map(item => {
-      return {
-        id: title + ',' + item.type + ',' + item.name,
-        label: item.name
-      };
-    });
-  }
-  return [];
-};
-
-/**
- *  获取所有菜单
- */
-const getAllmenus = async () => {
-  const { data } = await allMultilevelClassification();
-  menuDataList.value = data.data.map(item => {
-    let res = {};
-    res.id = item.id + ',' + item.title;
-    res.label = item.title;
-    res.children = [];
-    item.children.forEach(it => {
-      let title = it.id + ',' + it.title;
-      res.children.push({
-        id: title,
-        label: it.title,
-        children: getBtnList(title, it)
-      });
-    });
-    return res;
-  });
-};
-
-/**
- *  多级选择函数
- */
-const handleCheckChange = () => {
-  let selectAllIds = [...tree.value.getHalfCheckedKeys(), ...tree.value.getCheckedKeys()];
-  opCustomFormItems.value = {};
-  const selectMenus = selectAllIds.filter(item => {
-    return item.split(',').length === 2;
-  }).map((item) => {
-    const data = item.split(',');
-    return { menuId: data[0], menuTitle: data[1], rolebuttonsList: insertBunList(item, selectAllIds) };
-  });
-
-  if (selectMenus.length !== 0) {
-    opCustomFormItems.value = { 'roleMenus': selectMenus };
-  }
-};
-
-/**
- *  获取当前菜单下边的按钮
- */
-const insertBunList = (data, menuList) => {
-  let res = menuList.filter(item => {
-    return item.indexOf(data) > -1 && item !== data;
-  }).map(item => {
-    let arr = item.split(',');
-    return {
-      'buttonName': arr[3],
-      'buttonType': arr[2]
-    };
-  });
-  return res;
-};
 
 /**
  * 删除按钮
  * @param param
  */
-const deleteBtnFn = (param) => {
+const deleteBtnFn = (param: any) => {
   comActionCondition.value = { id: param };
   comFnName.value = deleteBtn;
   comActionDialog.value = {
@@ -344,7 +319,6 @@ const deleteBtnFn = (param) => {
   };
 };
 
-import { dynamicRoutes } from '@/router';
 
 /**
  *  批量新增菜单
@@ -353,7 +327,7 @@ const handleBatch = () => {
   const routesList = getMenuLevel(dynamicRoutes);
 
   function getMenuLevel(dynamicRoutes: any) {
-    return dynamicRoutes.map(item => {
+    return dynamicRoutes.map((item: any) => {
       return {
         name: item.name,
         title: item.meta.title,
@@ -370,7 +344,7 @@ const handleBatch = () => {
     function getBtnFn(buttonList: any) {
       let btnList: any[] = [];
       if (typeof (buttonList) !== 'undefined' && buttonList.length !== 0) {
-        btnList = buttonList.map(item => {
+        btnList = buttonList.map((item: { title: string; type: string }) => {
           return {
             title: item.title,
             type: item.type
@@ -382,11 +356,13 @@ const handleBatch = () => {
 
   }
 
-  batchMenuSave(routesList);
-  ElMessage.success(`批量新增菜单成功!`);
-  setTimeout(() => {
-    getItemList();
+  batchMenuSave(routesList).finally(() => {
+    ElMessage.success(`批量新增菜单成功!`);
+    setTimeout(() => {
+      getItemList();
+    });
   });
+
 
 };
 
@@ -396,7 +372,9 @@ const handleBatch = () => {
  */
 const onSubmit = async (params: any) => {
   try {
-    const actionFunction: Function = showMenuBtnVisible ? indertBtn : saveOrUpdate;
+    const actionFunction: Function = showMenuBtnVisible.value ? indertBtn : saveOrUpdate;
+    // 名称 name 转换一下
+    params.parentMenu = categoryAllList.value.filter((item: any) => item.id === params.parentMenu).map((item: any) => `${item.title},${item.name}`).join('');
     const result: any = await actionFunction(params);
     if (result.code === 20000) {
       ElMessage({ message: `操作成功`, grouping: true, type: 'success' });
@@ -415,42 +393,85 @@ const onSubmit = async (params: any) => {
 };
 
 /**
- *  新增按钮
+ *
+ * 添加按钮的验证规则
+ *
  */
-const firMenuList = ref([]); // 一级菜单
-
-const opDialogAddBtn = async () => {
-  opFormItems.value = [];
-  opFormDialog.value.visible = true;
-  showMenuBtnVisible.value = true;
-  const { data: { data: menuList } } = await category();
-  firMenuList.value = menuList;
-
-  opCustomFormItems.value = {
-    firMenuId: '',
-    menuId: '',
-    name: '',
-    type: ''
-  };
+const addBtnRule = {
+  parentMenu: [{ required: true, message: '请选选择父级菜单', trigger: 'change' }],
+  name: [{ required: true, message: '请选输入按钮名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选输入按钮类别', trigger: 'blur' }]
 };
 
 /**
- * 切换二级菜单
- * @param param
+ *
+ * 添加按钮的弹窗
+ *
  */
-const secMenuList = ref([]); // 二级菜单
-const getSecondsMenuByMenuId = async (param: Number | String) => {
-  if (param === 0 || param === '')
-    secMenuList.value = [];
-  const { data: { data: menuList } } = await getSecMenuList({ id: param });
-  secMenuList.value = menuList;
+const opDialogAddBtn = async () => {
+  opFormItems.value = [];
+  opFormRules.value = {};
+  // 按钮验证规则
+  opFormRules.value = addBtnRule;
+  // 从接口获取一级菜单列表
+  const { data: { data: menuList } } = await category();
+  const menuBtnMenuSelect = menuList.map((item: any) => {
+      return {
+        value: item.id,
+        label: item.title
+      };
+    }
+  );
+  // 设置表单每一项
+  opFormItems.value = [
+    { label: '父级菜单', prop: 'parentMenu', type: 'select', selectValue: menuBtnMenuSelect },
+    { label: '二级菜单', prop: 'menuId', type: 'select' },
+    { label: '按钮名称', prop: 'name', type: 'input' },
+    { label: '按钮type', prop: 'type', type: 'input' }
+  ];
+  // 展示弹窗显示表单
+  opFormDialog.value.visible = true;
+  showMenuBtnVisible.value = true;
 };
+
+/**
+ *
+ *  切换下拉框的方法用于一些操作
+ *
+ */
+
+const onChangeMenuSelect = async (val: any, item: any, opForm: any) => {
+
+
+  // 判断一级切换
+  if (item.prop === 'parentMenu' && showMenuBtnVisible.value) {
+    // 给与表单赋值
+    opFormItems.value[1].value = '';
+    opFormItems.value[0].value = val; // 默认赋值
+    opFormItems.value[2].value = opForm['name'];
+    opFormItems.value[3].value = opForm['type'];
+
+    // 二级菜单下拉查询
+    if (val !== '') {
+      const { data: { data: menuList } } = await getSecMenuList({ id: val });
+      opFormItems.value[1].selectValue = menuList.map( (item:any) => {
+        return {
+          value: item.id,
+          label: item.title
+        };
+      });
+    } else {
+      opFormItems.value[1].selectValue = [];
+    }
+  }
+};
+
 
 /**
  * 批量删除
  */
 const batchDelete = () => {
-  const ids = selectItemList.value.map(item => item.id);
+  const ids = selectItemList.value.map((item: any) => item.id);
   comFnName.value = dataBatchDelete;
   comActionDialog.value = {
     title: '批量删除',
@@ -461,21 +482,68 @@ const batchDelete = () => {
   comActionCondition.value = { 'ids': ids };
 };
 
+/**
+ *  移动的排序
+ */
+// S 移动排序
+const moveSortFn = (param: any) => {
+  tableVisible.value = false;
+  let { newIndex, oldIndex } = param;
 
-const getAddFormItem = () => {
-  opFormItems.value = [
-    { prop: 'id', value: '' },
-    { label: '父级菜单', prop: 'fid', type: 'select' },
-    { label: '菜单名称', prop: 'title', type: 'input' },
-    { label: '菜单Name', prop: 'name', type: 'input' },
-    { label: '菜单排序', prop: 'menuOrder', type: 'input' }
-  ];
+  /**
+   *  将table数据展开
+   */
+  const expandData = function() {
+    let tableData: any[] = [];
+    dataSource.value.map((item) => {
+      tableData.push(...expandArray(item));
+    });
+
+    /**
+     * 子项数据展开
+     */
+    function expandArray(param: any) {
+      let subArray = [];
+      subArray.push(param);
+      if (param.children.length !== 0) {
+        param.children.map((item: any) => {
+          subArray.push(item);
+        });
+      }
+      return subArray;
+    }
+
+    return tableData;
+  };
+
+
+  // 自下而上 oldIndex 原有数据   newIndex 新排位置的数据
+  let postData = expandData()[oldIndex];
+  if (expandData()[oldIndex]['fid'] !== expandData()[newIndex]['fid']) {
+    postData['fid'] = expandData()[newIndex]['fid'];
+  }
+
+  if (oldIndex > newIndex) {
+    // 先查看 fid  如果原有fid是0 目标fid0 则修改menuOrder ，  原有fid不是 0   目标是0  则修改fid menuOrder ,  原有fid 与目标 fid 不一样
+    postData['menuOrder'] = expandData()[newIndex]['menuOrder'] + 1;
+  } else if (oldIndex < newIndex) { // 自上而下
+    if (expandData()[newIndex]['menuOrder'] > 0) {
+      postData['menuOrder'] = expandData()[newIndex]['menuOrder'] - 1;
+    } else {
+      postData['menuOrder'] = 0;
+    }
+  }
+  saveOrUpdate(postData).finally(() => {
+    getItemList();
+  }).finally(() => {
+    tableVisible.value = true;
+  });
 };
+
+// E 移动排序
 
 onMounted(() => {
   getListFnName.value = menuList;
-
-
 });
 </script>
 

@@ -35,10 +35,10 @@
               <el-dropdown-item>{{ $t('navbar.dashboard') }}</el-dropdown-item>
             </router-link>
 
-            <a target='_blank' @click='openDrawer(1)'>
+            <a target='_blank' @click='openDrawer(1,"更换头像")'>
               <el-dropdown-item>更换头像</el-dropdown-item>
             </a>
-            <a target='_blank' @click='openDrawer(2)'>
+            <a target='_blank' @click='openDrawer(2,"修改密码")'>
               <el-dropdown-item>修改密码</el-dropdown-item>
             </a>
 
@@ -50,18 +50,21 @@
       </el-dropdown>
     </div>
   </div>
-
-  <el-drawer v-model='drawer' :with-header='false'>
-    <Upload v-if='drawerTypes === 1' @uploadSuccess='uploadSuccess' uploadFolderName='avatar'
-            uploadBtnName='上传头像'></Upload>
-    <password v-if='drawerTypes === 2'></password>
-  </el-drawer>
-
+  <!-- :with-header='false'  -->
+  <div class='mainDrawer'>
+    <el-drawer v-model='drawer' :title='drawerTitle' :visible.sync='drawerTitle'
+               :before-close='drawerHandleClose'
+    >
+        <Upload v-if='drawerTypes === 1' @uploadSuccess='uploadSuccess' uploadFolderName='avatar'
+                uploadBtnName='上传头像'></Upload>
+        <password v-if='drawerTypes === 2'></password>
+    </el-drawer>
+  </div>
 </template>
 
 
 <script setup lang='ts'>
-import { computed, ref } from 'vue';
+import { computed, ref, Ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 
@@ -79,8 +82,9 @@ import { useAppStore } from '@/store/modules/app';
 import { useTagsViewStore } from '@/store/modules/tagsView';
 import { useUserStore } from '@/store/modules/user';
 import { useSettingsStore } from '@/store/modules/settings';
-import { setUserAvator } from '@/api/user/index'
+import { setUserAvator } from '@/api/user/index';
 import { Message } from 'postcss';
+
 const appStore = useAppStore();
 const tagsViewStore = useTagsViewStore();
 const userStore = useUserStore();
@@ -89,9 +93,9 @@ const settingsStore = useSettingsStore();
 const route = useRoute();
 const router = useRouter();
 
-const drawer = ref(false);
-const drawerTypes = ref(1);
-
+const drawer: Ref<boolean> = ref(false);
+const drawerTypes: Ref<number> = ref(1);
+const drawerTitle: Ref<string> = ref('');
 const device = computed(() => appStore.device);
 
 function toggleSideBar() {
@@ -115,21 +119,26 @@ function logout() {
   });
 }
 
-const openDrawer = (type) => {
+const drawerHandleClose = () => {
+  drawer.value = false;
+};
+
+const openDrawer = (type: any, title: string) => {
   drawerTypes.value = type;
   drawer.value = true;
+  drawerTitle.value = title;
 };
 
 function uploadSuccess(param: avatarSuccess[]) {
   if (param.length !== 0) {
-    setUserAvator({ 'avatar': param[0]['url'] }).then(()=>{
-      ElMessage.success('头像上传成功!');
+    setUserAvator({ avatar: param[0].url.toString() }).then(() => {
+      ElMessage.success('头像上传成功！');
       setTimeout(() => {
-        drawer.value = false
-      })
-    }).finally(()=>{
-      userStore.getInfo()
-    })
+        drawer.value = false;
+      });
+    }).finally(() => {
+      userStore.getInfo();
+    });
   }
 }
 
@@ -151,4 +160,10 @@ interface avatarSuccess {
   justify-content: space-between;
   box-shadow: 0 0px 2px rgba(0, 0, 0, 0.2);
 }
+
+
+.mainDrawer ::v-deep .el-drawer__header {
+  margin-bottom: 0px;
+}
+
 </style>
