@@ -1,6 +1,8 @@
 /**
  * 登录用户信息
  */
+import { string } from 'fast-glob/out/utils';
+
 export interface UserInfo {
   nickname: string;
   avatar: string;
@@ -51,10 +53,17 @@ export interface UserForm {
   avatar:string;
 }
 
-/**
- * 用户导入表单类型声明
- */
-export interface UserImportData {
-  deptId: number;
-  roleIds: number[];
+export interface UserImportData{
+
+}
+
+
+
+export interface UserOldPassword{
+  password:string
+}
+
+
+export interface avatarModify {
+  avatar: string;
 }

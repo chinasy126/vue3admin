@@ -1,13 +1,13 @@
 import request from '@/utils/request';
-import {AxiosPromise} from 'axios';
-import {UserForm, UserInfo, UserPageResult, UserQuery} from './types';
-import {getToken} from "@/utils/auth";
+import { AxiosPromise } from 'axios';
+import { avatarModify, UserForm, UserInfo, UserOldPassword, UserPageResult, UserQuery } from './types';
+import { getToken } from '@/utils/auth';
 
 /**
  * 登录成功后获取用户信息（昵称、头像、权限集合和角色集合）
  */
 export function getUserInfo(): AxiosPromise<UserInfo> {
-  let token =  getToken();
+  let token = getToken();
   return request({
     url: `/user/info?token=${token}`,
     method: 'get'
@@ -59,7 +59,6 @@ export function addUser(data: any) {
 }
 
 
-
 /**
  * 修改用户
  *
@@ -84,7 +83,7 @@ export function updateUserStatus(id: number, status: number) {
   return request({
     url: '/api/v1/users/' + id + '/status',
     method: 'patch',
-    params: {status: status}
+    params: { status: status }
   });
 }
 
@@ -98,7 +97,7 @@ export function updateUserPassword(id: number, password: string) {
   return request({
     url: '/api/v1/users/' + id + '/password',
     method: 'patch',
-    params: {password: password}
+    params: { password: password }
   });
 }
 
@@ -172,3 +171,30 @@ export function getVerificationCode() {
     responseType: 'blob'
   });
 }
+
+
+export function checkOldPassword(data:UserOldPassword) {
+  return request({
+    url: '/user/compasssame',
+    method: 'post',
+    data
+  });
+}
+
+
+export function modifyPassword(data:UserOldPassword) {
+  return request({
+    url: '/user/updatepassword',
+    method: 'post',
+    data
+  });
+}
+
+export function setUserAvator(data: avatarModify) {
+  return request({
+    url: '/user/setavator',
+    method: 'post',
+    data,
+  });
+}
+

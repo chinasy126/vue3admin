@@ -56,7 +56,7 @@ export function deleteData(params:any) {
 }
 
 
-export function deleteBtn(params) {
+export function deleteBtn(params:any) {
   return request({
     url: `/menubutton/delete`,
     method: 'post',

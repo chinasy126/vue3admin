@@ -104,7 +104,7 @@ export function parseTime(time: any, cFormat: any) {
  * @returns {string|*}
  */
 export function isNull(val: any) {
-  if (val && typeof (val) !== 'undefined') {
+  if (typeof (val) !== 'undefined') {
     return val
   } else {
     return ''

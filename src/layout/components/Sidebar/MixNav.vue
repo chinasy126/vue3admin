@@ -109,10 +109,10 @@ function logout() {
               <el-dropdown-item>{{ $t('navbar.dashboard') }}</el-dropdown-item>
             </router-link>
             <a target="_blank" href="https://github.com/hxrui">
-              <el-dropdown-item>Github</el-dropdown-item>
+              <el-dropdown-item>上传头像</el-dropdown-item>
             </a>
-            <a target="_blank" href="https://gitee.com/haoxr">
-              <el-dropdown-item>{{ $t('navbar.gitee') }}</el-dropdown-item>
+            <a target="_blank" href="https://github.com/hxrui">
+              <el-dropdown-item>修改密码</el-dropdown-item>
             </a>
             <a target="_blank" href="https://www.cnblogs.com/haoxianrui/">
               <el-dropdown-item>{{ $t('navbar.document') }}</el-dropdown-item>

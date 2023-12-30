@@ -20,7 +20,7 @@ export function getRouterToShow(dataBaseRouters: any[]) {
     dataBaseRouters.forEach(item => {
       let r = dynamicRoutes.find(i => i.name === item.name);
       if (r) {
-        let data = {...r};
+        let data:any = {...r};
         data.meta.title = item.meta.title;
         data.meta.menuOrder = item.meta.menuOrder;
         data.children = getRouterChildren(item, r);
@@ -138,7 +138,7 @@ export const filterAsyncRoute = (routes: any[]) => {
     routes.forEach(routerItem => {
       if (routerItem.fid === 0) {
         const firMenuItem: any = dynamicRoutes.find(i => {
-          return i?.name?.toLowerCase() === routerItem.name.toLowerCase();
+          return i?.name?.toString().toLowerCase() === routerItem.name.toLowerCase();
         });
         // 设置二级菜单
         firMenuItem.children = getSecMenuList(firMenuItem.children, routes);

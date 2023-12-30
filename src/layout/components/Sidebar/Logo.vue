@@ -35,7 +35,7 @@ const logo = ref<string>(
       to="/"
     >
       <img v-if="settingsStore.sidebarLogo" :src="logo" class="w-5 h-5" />
-      <span class="ml-3 text-white text-sm font-bold">vue3-element-admin</span>
+      <span class="ml-3 text-white text-sm font-bold">vue3Admin</span>
     </router-link>
   </transition>
 </template>

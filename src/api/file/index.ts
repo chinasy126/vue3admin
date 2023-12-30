@@ -2,22 +2,33 @@ import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
 import { FileInfo } from './types';
 
-/**
- * 上传文件
- *
- * @param file
- */
-export function uploadFileApi(file: File): AxiosPromise<FileInfo> {
-  const formData = new FormData();
-  formData.append('file', file);
+export function uploadImg(data: any, config: any) {
   return request({
-    url: '/api/v1/files',
+    url: `/upload/pictures`,
     method: 'post',
-    data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+    headers:config.headers,
+    data
   });
+}
+
+export function uploadFileApi(data: any, config: any = {}): AxiosPromise<FileInfo> {
+  return request({
+    url: `/upload/pictures`,
+    method: 'post',
+    headers:config.headers,
+    data
+  });
+
+  // const formData = new FormData();
+  // formData.append('file', file);
+  // return request({
+  //   url: '/api/v1/files',
+  //   method: 'post',
+  //   data: formData,
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data'
+  //   }
+  // });
 }
 
 /**

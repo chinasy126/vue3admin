@@ -44,7 +44,7 @@ export function newsInsert(params: any) {
  */
 export function newsModify(params: any) {
   return request({
-    url: `/news/modify`,
+    url: `/news/saveOrUpdate`,
     method: 'post',
     data: params
   });
@@ -126,7 +126,7 @@ export function batchDelete(params: Number[]) {
 
 
 export function importFileData(param: any, config: any, callback: any) {
-  console.log(config)
+  console.log(config);
 
   return request({
     url: `/news/import`,

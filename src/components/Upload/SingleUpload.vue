@@ -49,7 +49,7 @@ const imgUrl = computed<string | undefined>({
  * @param options
  */
 async function uploadFile(options: UploadRequestOptions): Promise<any> {
-  const { data: fileInfo } = await uploadFileApi(options.file);
+  const { data: fileInfo } = await uploadFileApi(options.file,{});
   imgUrl.value = fileInfo.url;
 }
 

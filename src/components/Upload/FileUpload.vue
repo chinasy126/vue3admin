@@ -37,7 +37,7 @@ const onSuccess = () => {
 
 };
 
-const httpRequest = (param) => {
+const httpRequest = (param:any) => {
 
   const form = new FormData();
   form.append('file', param.file);
@@ -52,10 +52,10 @@ const httpRequest = (param) => {
         'X-Token': window.localStorage.getItem('token')
       }
     },
-    progress => {
+    (progress:any) => {
       console.log(progress);
     }
-  ).then(res => {
+  ).then((res:any) => {
     ElMessage.success('导入成功!');
     emit('onUploadFileSuccess', 'success');
   });

@@ -65,6 +65,7 @@
         </span>
           <el-input placeholder="验证码"
                     tabindex="3"
+                    maxlength="6"
                     type="text"
                     name="code"
                     v-model="loginData.code"/>
@@ -89,7 +90,7 @@
 
 <script setup lang="ts">
 import {onMounted, reactive, ref, toRefs, watch, nextTick} from 'vue';
-
+import {getToken, setToken, removeToken} from '@/utils/auth';
 // 组件依赖
 import {ElForm, ElInput} from 'element-plus';
 import router from '@/router';
@@ -109,9 +110,6 @@ const route = useRoute();
 
 const loginFormRef = ref(ElForm);
 const passwordRef = ref(ElInput);
-
-import {getToken, setToken, removeToken} from '@/utils/auth';
-import * as console from "console";
 
 const state = reactive({
   imgSrc: '',
@@ -192,9 +190,11 @@ function handleLogin() {
           state.loading = false;
         })
         .catch(() => {
+          getLoginCode();
           state.loading = false;
         });
     } else {
+      getLoginCode();
       return false;
     }
   });
@@ -421,6 +421,10 @@ $light_gray: #eee;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 18px;
+
+  ::v-deep .el-input__wrapper{
+    width: 100% ;
+  }
 
   div:nth-child(1) {
     margin-bottom: 0px;

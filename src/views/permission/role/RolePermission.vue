@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import {defineProps, defineEmits, onMounted, watch, computed} from "vue";
-
+import { RoleMenus } from '@/api/role/types'
 const prop = defineProps({
   permission: {
     type: Object,
@@ -24,12 +24,12 @@ const prop = defineProps({
 
 const permissionList = computed(() => {
   // 一级菜单
-  let primaryMenu = prop.permission.filter(item => {
+  let primaryMenu = prop.permission.filter( (item:RoleMenus) => {
     return item.menuFid === 0
   })
 
-  primaryMenu.forEach((item, index) => {
-    let secondaryMenu = prop.permission.filter(i => {
+  primaryMenu.forEach((item:RoleMenus, index:number) => {
+    let secondaryMenu = prop.permission.filter( (i:RoleMenus) => {
       return item.menuId === i.menuFid
     })
     primaryMenu[index]['secondaryMenu'] = secondaryMenu
