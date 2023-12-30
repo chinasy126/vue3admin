@@ -1,5 +1,5 @@
 {
-  "name": "admin",
+  "name": "vue3Admin",
   "version": "1.2.0",
   "scripts": {
     "dev": "vite serve --mode development",
@@ -30,7 +30,8 @@
     "sortablejs": "^1.14.0",
     "vue": "^3.2.40",
     "vue-i18n": "^9.1.9",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",
@@ -59,5 +60,5 @@
     "vite-plugin-svg-icons": "^2.0.1",
     "vue-tsc": "^0.35.0"
   },
-  "author": "沈阳城管"
+  "author": ""
 }

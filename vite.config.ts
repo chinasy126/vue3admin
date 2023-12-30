@@ -24,15 +24,19 @@ export default ({ mode }: ConfigEnv): UserConfig => {
       open: false , // 运行自动打开浏览器 true
       proxy: {
         [env.VITE_APP_BASE_API]: {
-          target: 'http://localhost:8088',
-          // 线上API地址
-          // target: 'http://vapi.youlai.tech',
-          // 本地API地址
-          // target: 'http://localhost:8989',
+          target: env.VITE_APP_TARGET,
           changeOrigin: true,
           rewrite: path =>
             path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')
+        },
+
+        [env.VITE_APP_UPLOAD_PREFIX_API] : {
+          target: env.VITE_APP_UPLOAD_URL, // 图片访问转换地址
+          changeOrigin: true,
+          rewrite: path =>
+            path.replace(new RegExp('^' + env.VITE_APP_UPLOAD_PREFIX_API), '')
         }
+
       }
     },
     resolve: {
